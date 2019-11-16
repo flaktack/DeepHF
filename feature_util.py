@@ -76,15 +76,15 @@ def featurize_data(data, feature_options, length_audit=True, quiet=True):
                                                                                  num_partitions, num_processes )
 
         get_all_order_ba_features( ba_rows, feature_sets, feature_options, feature_options["order"], max_index_to_use=99,
-                                   quiet=False )
-        check_feature_set( feature_sets, 3 )
+                                   quiet=quiet )
+        check_feature_set( feature_sets, 3, quiet=quiet )
 
     if feature_options["nuc_features"]:
         # spectrum kernels (position-independent) and weighted degree kernels (position-dependent)
         get_all_order_nuc_features( data_rows, feature_sets, feature_options, feature_options["order"],
                                     max_index_to_use=21, quiet=quiet )
 
-    check_feature_set( feature_sets )
+    check_feature_set( feature_sets, quiet=quiet )
 
     if feature_options["gc_features"]:
         gc_above_10, gc_below_10, gc_count = gc_features( data_rows, length_audit )
@@ -103,12 +103,12 @@ def featurize_data(data, feature_options, length_audit=True, quiet=True):
         assert (
             "should not be here as doesn't make sense when we make one-off predictions, but could make sense for internal model comparisons when using regularized models")
         feature_sets = normalize_feature_sets( feature_sets )
-        check_feature_set( feature_sets )
+        check_feature_set( feature_sets, quiet=quiet )
 
     return feature_sets
 
 
-def check_feature_set(feature_sets, debug=0):
+def check_feature_set(feature_sets, debug=0, quiet=True):
     '''
     Ensure the # of people is the same in each feature set
     TypeError: ufunc 'isnan' not supported for the input types, and the inputs could not be safely coerced to
@@ -120,7 +120,8 @@ def check_feature_set(feature_sets, debug=0):
     for ft in feature_sets.keys():
         N2 = feature_sets[ft].shape[0]
         if N is None:
-            print( "N-{},N2-{}".format( N, N2 ) )
+            if not quiet:
+                print( "N-{},N2-{}".format( N, N2 ) )
             N = N2
         else:
             assert N >= 1, "should be at least one individual"
@@ -192,7 +193,8 @@ def normalize_features(data, axis):
 
 
 def get_all_order_nuc_features(data, feature_sets, feature_options, maxorder, max_index_to_use, prefix="", quiet=True):
-    print('Constructing nucleotide features.')
+    if not quiet:
+        print('Constructing nucleotide features.')
     for order in range( 1, maxorder + 1 ):
         nuc_features_pd, nuc_features_pi = apply_sparse_seq_features( data, order, feature_options["num_proc"],
                                                                       include_pos_independent=True,
@@ -201,11 +203,12 @@ def get_all_order_nuc_features(data, feature_sets, feature_options, maxorder, ma
         feature_sets['%s_nuc_pd_Order%i' % (prefix, order)] = nuc_features_pd
         if feature_options['include_pi_nuc_feat']:
             feature_sets['%s_nuc_pi_Order%i' % (prefix, order)] = nuc_features_pi
-        check_feature_set( feature_sets )
+        check_feature_set( feature_sets, quiet=quiet )
 
 
 def get_all_order_ba_features(data, feature_sets, feature_options, maxorder, max_index_to_use, prefix="", quiet=True):
-    print('Constructing sencondary structure features.')
+    if not quiet:
+        print('Constructing sencondary structure features.')
     for order in range( 1, maxorder + 1 ):
         nuc_features_pd, nuc_features_pi = apply_sparse_seq_features( data, order, feature_options["num_proc"],
                                                                       include_pos_independent=True,
@@ -214,7 +217,7 @@ def get_all_order_ba_features(data, feature_sets, feature_options, maxorder, max
         feature_sets['%s_ba_pd_Order%i' % (prefix, order)] = nuc_features_pd
         if feature_options['include_pi_nuc_feat']:
             feature_sets['%s_ba_pi_Order%i' % (prefix, order)] = nuc_features_pi
-        check_feature_set( feature_sets, 3 )
+        check_feature_set( feature_sets, 3, quiet=quiet )
 
 
 def apply_sparse_seq_features(seq_data, order, num_proc, include_pos_independent, max_index_to_use, raw_alphabet,
