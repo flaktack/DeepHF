@@ -30,6 +30,17 @@ ipython kernel install --user --name crispr --display-name "Python3(crispr)"
 ```
 Installation time depends on your own network environment.
 
+#### Docker
+
+```
+# Build container
+docker build -t deephf .
+# One sequence
+echo GACAGCTTTACGTCCAACAATGG | docker run --rm -i deephf
+# Or multiple newline separated sequences
+cat sequences.txt | docker run --rm -i deephf
+```
+
 ### Demo
 Demos were included in the  [Demo.ipynb](https://github.com/izhangcd/DeepHF/blob/master/Demo.ipynb) file. It contains prediction, metrics and model training demos.
 

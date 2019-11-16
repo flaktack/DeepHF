@@ -1,4 +1,5 @@
 import os
+import sys
 import pandas as pd
 import keras
 from keras.preprocessing import text
@@ -100,7 +101,6 @@ def output_prediction(inputs, df, model_type='esp'):
 def effciency_predict(sequence, model_type='esp'):
     sequence = sequence.strip()
     import re
-    # 找出sequence后面20位之后含GG的index
     indexs = [m.start() for m in re.finditer( '(?=GG)', sequence ) if m.start() > 20]
     gRNA = []
     Cut_Pos = []
@@ -129,3 +129,9 @@ def effciency_predict(sequence, model_type='esp'):
                             'PAM': PAM}, columns=['Strand', 'Cut_Pos', '21mer', 'PAM'] )
     X,X_biofeat = get_embedding_data(df,feature_options)
     return output_prediction( [X,X_biofeat], df, model_type )
+
+model_type = sys.argv[1] if len(sys.argv) == 2 else "hf"
+
+for line in iter(sys.stdin.readline, ""):
+    print("%s,%f" % (line.strip(), effciency_predict(line.strip(), 'hf')['Efficiency'][0]), flush=True)
+
